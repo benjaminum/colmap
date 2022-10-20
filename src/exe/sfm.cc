@@ -42,6 +42,7 @@
 #include "util/misc.h"
 #include "util/opengl_utils.h"
 #include "util/option_manager.h"
+#include "util/types.h"
 
 namespace colmap {
 
@@ -135,10 +136,12 @@ int RunAutomaticReconstructor(int argc, char** argv) {
 int RunBundleAdjuster(int argc, char** argv) {
   std::string input_path;
   std::string output_path;
+  std::string constant_point_ids_path;
 
   OptionManager options;
   options.AddRequiredOption("input_path", &input_path);
   options.AddRequiredOption("output_path", &output_path);
+  options.AddDefaultOption("constant_point_ids_path", &constant_point_ids_path, "A text file that specifies the constant point ids separated with ','.");
   options.AddBundleAdjustmentOptions();
   options.Parse(argc, argv);
 
@@ -151,9 +154,29 @@ int RunBundleAdjuster(int argc, char** argv) {
     std::cerr << "ERROR: `output_path` is not a directory" << std::endl;
     return EXIT_FAILURE;
   }
+  if (constant_point_ids_path.size() && !ExistsFile(constant_point_ids_path))
+  {
+    std::cerr << "ERROR: `constant_point_ids_path` does not exist" << std::endl;
+    return EXIT_FAILURE;
+  }
+
 
   Reconstruction reconstruction;
   reconstruction.Read(input_path);
+  
+  if (constant_point_ids_path.size())
+  {
+    std::ifstream f(constant_point_ids_path);
+    std::stringstream buf;
+    buf << f.rdbuf();
+    auto tmp = CSVToVector<int>(buf.str());
+    std::vector<point3D_t> ids;
+    for ( auto x : tmp ){
+      ids.push_back(x);
+    }
+    reconstruction.SetConstantPoint3DIds(ids);
+  }
+
 
   BundleAdjustmentController ba_controller(options, &reconstruction);
   ba_controller.Start();

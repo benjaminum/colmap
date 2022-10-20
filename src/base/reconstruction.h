@@ -385,6 +385,15 @@ class Reconstruction {
   // Create all image sub-directories in the given path.
   void CreateImageDirs(const std::string& path) const;
 
+
+  const std::vector<point3D_t>& GetConstantPoint3DIds() const {
+    return constant_point3D_ids;
+  }
+
+  void SetConstantPoint3DIds(const std::vector<point3D_t>& ids){
+    constant_point3D_ids = ids;
+  }
+
  private:
   size_t FilterPoints3DWithSmallTriangulationAngle(
       const double min_tri_angle,
@@ -430,6 +439,9 @@ class Reconstruction {
 
   // Total number of added 3D points, used to generate unique identifiers.
   point3D_t num_added_points3D_;
+
+  // The indices of the 3D points that are held constant.
+  std::vector<point3D_t> constant_point3D_ids;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

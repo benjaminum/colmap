@@ -32,6 +32,7 @@
 #include "optim/bundle_adjustment.h"
 
 #include <iomanip>
+// #include <csignal>
 
 #ifdef OPENMP_ENABLED
 #include <omp.h>
@@ -260,6 +261,10 @@ bool BundleAdjuster::Solve(Reconstruction* reconstruction) {
   CHECK(!problem_) << "Cannot use the same BundleAdjuster multiple times";
 
   problem_.reset(new ceres::Problem());
+
+  for( auto x : reconstruction->GetConstantPoint3DIds() ){
+    config_.AddConstantPoint(x);
+  }
 
   ceres::LossFunction* loss_function = options_.CreateLossFunction();
   SetUp(reconstruction, loss_function);
@@ -526,6 +531,7 @@ void BundleAdjuster::ParameterizePoints(Reconstruction* reconstruction) {
   for (const point3D_t point3D_id : config_.ConstantPoints()) {
     Point3D& point3D = reconstruction->Point3D(point3D_id);
     problem_->SetParameterBlockConstant(point3D.XYZ().data());
+    // std::raise(SIGINT);
   }
 }
 
